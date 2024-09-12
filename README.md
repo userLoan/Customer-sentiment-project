@@ -1,5 +1,5 @@
 # Customer-sentiment-project
-Can we use Sentiment Analysis to Stock prices? 
+Can we use Sentiment Analysis to Predict Stock Prices?
 
 # OVERVIEW
 
