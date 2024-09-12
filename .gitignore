@@ -1,162 +1,166 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import yfinance as yf
+import praw
+import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+from textblob import TextBlob
+import logging
+from datetime import datetime, timedelta
+import matplotlib.dates as mdates
+from tqdm import tqdm
 
-# C extensions
-*.so
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+stock = "JPM"  
+ticker = yf.Ticker(stock)
+hists = {
+    stock: ticker.history(start="2023-06-01", end="2024-01-01") 
+}
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+temp_df = hists[stock].copy()
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+fig = go.Figure(
+    data=[
+        go.Candlestick(
+            x=temp_df.index,
+            open=temp_df["Open"],
+            high=temp_df["High"],
+            low=temp_df["Low"],
+            close=temp_df["Close"],
+        )
+    ]
+)
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
+fig.update_layout(
+    margin=dict(l=20, r=20, t=60, b=20),
+    height=300,
+    paper_bgcolor="LightSteelBlue",
+    title= "JPM",
+)
 
-# Translations
-*.mo
-*.pot
+fig.show()
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
 
-# Flask stuff:
-instance/
-.webassets-cache
 
-# Scrapy stuff:
-.scrapy
+# Log In to App: 
+reddit = praw.Reddit(client_id='LchMksVUmRUeyg', client_secret='gb1XyXX-r0ycV9KKFM-ujFVNOogO_w', user_agent='Data Scraping')
 
-# Sphinx documentation
-docs/_build/
+# Initialize Reddit client with your credentials
+reddit = praw.Reddit(
+    client_id="LchMksVUmRUeyg",
+    client_secret="gb1XyXX-r0ycV9KKFM-ujFVNOogO_w",
+    user_agent="Data Scraping"
+)
 
-# PyBuilder
-.pybuilder/
-target/
+# Define your query
+query = "stock market"
 
-# Jupyter Notebook
-.ipynb_checkpoints
+# Define the subreddit to search
+subreddit = reddit.subreddit("all")  # You can specify a subreddit, e.g., "wallstreetbets"
 
-# IPython
-profile_default/
-ipython_config.py
+# Fetch submissions related to your query
+posts = []
+for submission in subreddit.search(query, limit=100):  # Limiting to 100 posts
+    posts.append([submission.created_utc, submission.id, submission.title, submission.selftext])
 
-# pyenv
-#   For a library or package, you might want to ignore these files since the code is
-#   intended to run in multiple environments; otherwise, check them in:
-# .python-version
+# Convert the list of posts to a DataFrame
+reddit_df = pd.DataFrame(posts, columns=["Date", "Post ID", "Title", "Content"])
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+# Display the DataFrame
+print(reddit_df.head())
 
-# poetry
-#   Similar to Pipfile.lock, it is generally recommended to include poetry.lock in version control.
-#   This is especially recommended for binary packages to ensure reproducibility, and is more
-#   commonly ignored for libraries.
-#   https://python-poetry.org/docs/basic-usage/#commit-your-poetrylock-file-to-version-control
-#poetry.lock
 
-# pdm
-#   Similar to Pipfile.lock, it is generally recommended to include pdm.lock in version control.
-#pdm.lock
-#   pdm stores project-wide configurations in .pdm.toml, but it is recommended to not include it
-#   in version control.
-#   https://pdm.fming.dev/latest/usage/project/#working-with-version-control
-.pdm.toml
-.pdm-python
-.pdm-build/
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
-__pypackages__/
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+try:
+    reddit = praw.Reddit(
+        client_id="LchMksVUmRUeyg",
+        client_secret="gb1XyXX-r0ycV9KKFM-ujFVNOogO_w",
+        user_agent="Data Scraping"
+    )
+    logging.info("Đã kết nối thành công với Reddit API")
 
-# SageMath parsed files
-*.sage.py
+    subreddit = reddit.subreddit("stocks")
+    queries = ["JPM earnings", "JPM stock price", "JPM financial results", "JPM revenue", "JPM financial news", "JPM", "JPMorgan Chase"]
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+    posts = []
+    for query in queries:
+        for submission in tqdm(subreddit.search(query, limit=100), total=100):
+            posts.append([submission.created_utc, submission.id, submission.title, submission.selftext])
+    
+    logging.info(f"Đã thu thập {len(posts)} bài viết từ Reddit")
 
-# Spyder project settings
-.spyderproject
-.spyproject
+    if not posts:
+        raise ValueError("Không tìm thấy bài viết nào trên Reddit. Kiểm tra lại truy vấn của bạn.")
 
-# Rope project settings
-.ropeproject
+    reddit_df = pd.DataFrame(posts, columns=["Date", "Post Id", "Title", "Content"])
+    reddit_df['Date'] = pd.to_datetime(reddit_df['Date'], unit='s')
+    logging.info(f"Kích thước DataFrame Reddit: {reddit_df.shape}")
 
-# mkdocs documentation
-/site
+    def get_sentiment(text):
+        return TextBlob(text).sentiment.polarity
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+    reddit_df['sentiment'] = reddit_df.apply(lambda row: get_sentiment(row["Title"] + " " + row["Content"]), axis=1)
 
-# Pyre type checker
-.pyre/
+    logging.info("Đã hoàn thành tính toán sentiment")
 
-# pytype static type analyzer
-.pytype/
+    plt.figure(figsize=(15, 5))
+    reddit_df["sentiment"].hist(bins=50)
+    plt.title("Sentiment distribution")
+    plt.xlabel("Sentiment scores")
+    plt.ylabel("Reddit posts")
+    plt.show()
 
-# Cython debug symbols
-cython_debug/
+    reddit_df["Date"] = reddit_df["Date"].dt.date
+    sent_daily = reddit_df.groupby("Date")["sentiment"].mean()
 
-# PyCharm
-#  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
-#  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
-#  and can be added to the global gitignore or merged into this file.  For a more nuclear
-#  option (not recommended) you can uncomment the following to ignore the entire idea folder.
-#.idea/
+    stock = yf.Ticker("AAPL")
+    hist = stock.history(start=sent_daily.index.min(), end=sent_daily.index.max())
+    hist = hist.reset_index()
+    hist["Date"] = hist["Date"].dt.date
+    hist = hist.set_index("Date")
+
+    sent_and_stock = sent_daily.to_frame("sentiment").merge(
+        hist, left_index=True, right_index=True
+    )
+
+    fig, ax1 = plt.subplots(figsize=(20, 7))
+
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Sentiment', color='tab:blue')
+    ax1.plot(sent_and_stock.index, sent_and_stock["sentiment"], color='tab:blue', label='Sentiment')
+    ax1.tick_params(axis='y', labelcolor='tab:blue')
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('Closing price', color='tab:orange')
+    ax2.plot(sent_and_stock.index, sent_and_stock["Close"], color='tab:orange', label='Closing price')
+    ax2.tick_params(axis='y', labelcolor='tab:orange')
+
+    fig.tight_layout()
+    plt.title('Sentiment vs Closing price')
+    fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
+    plt.show()
+
+    correlation = sent_and_stock["sentiment"].corr(sent_and_stock["Close"])
+    logging.info(f"Hệ số tương quan giữa Sentiment và Giá đóng cửa: {correlation:.2f}")
+
+except Exception as e:
+    logging.error(f"Đã xảy ra lỗi: {str(e)}")
+
+finally:
+    logging.info("Script đã kết thúc")
+
+
+
+
+
+
+
+
+
+
+
+
+
