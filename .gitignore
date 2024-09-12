@@ -72,40 +72,47 @@ print(reddit_df.head())
 
 
 
+# Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 try:
+    # Initialize Reddit client with your credentials
     reddit = praw.Reddit(
         client_id="LchMksVUmRUeyg",
         client_secret="gb1XyXX-r0ycV9KKFM-ujFVNOogO_w",
         user_agent="Data Scraping"
     )
-    logging.info("Đã kết nối thành công với Reddit API")
+    logging.info("Successfully connected to Reddit API")
 
+    # Define subreddit and keywords for search
     subreddit = reddit.subreddit("stocks")
     queries = ["JPM earnings", "JPM stock price", "JPM financial results", "JPM revenue", "JPM financial news", "JPM", "JPMorgan Chase"]
 
+    # Collect data from Reddit posts
     posts = []
     for query in queries:
         for submission in tqdm(subreddit.search(query, limit=100), total=100):
             posts.append([submission.created_utc, submission.id, submission.title, submission.selftext])
     
-    logging.info(f"Đã thu thập {len(posts)} bài viết từ Reddit")
+    logging.info(f"Collected {len(posts)} posts from Reddit")
 
     if not posts:
-        raise ValueError("Không tìm thấy bài viết nào trên Reddit. Kiểm tra lại truy vấn của bạn.")
+        raise ValueError("No posts found on Reddit. Check your queries.")
 
     reddit_df = pd.DataFrame(posts, columns=["Date", "Post Id", "Title", "Content"])
     reddit_df['Date'] = pd.to_datetime(reddit_df['Date'], unit='s')
-    logging.info(f"Kích thước DataFrame Reddit: {reddit_df.shape}")
+    logging.info(f"Reddit DataFrame size: {reddit_df.shape}")
 
+    # Function to calculate sentiment
     def get_sentiment(text):
         return TextBlob(text).sentiment.polarity
 
+    # Calculate sentiment for the posts
     reddit_df['sentiment'] = reddit_df.apply(lambda row: get_sentiment(row["Title"] + " " + row["Content"]), axis=1)
 
-    logging.info("Đã hoàn thành tính toán sentiment")
+    logging.info("Completed sentiment calculation")
 
+    # Plot sentiment score distribution
     plt.figure(figsize=(15, 5))
     reddit_df["sentiment"].hist(bins=50)
     plt.title("Sentiment distribution")
@@ -116,6 +123,7 @@ try:
     reddit_df["Date"] = reddit_df["Date"].dt.date
     sent_daily = reddit_df.groupby("Date")["sentiment"].mean()
 
+    # Collect company financial data
     stock = yf.Ticker("AAPL")
     hist = stock.history(start=sent_daily.index.min(), end=sent_daily.index.max())
     hist = hist.reset_index()
@@ -126,6 +134,7 @@ try:
         hist, left_index=True, right_index=True
     )
 
+    # Plot sentiment vs stock price
     fig, ax1 = plt.subplots(figsize=(20, 7))
 
     ax1.set_xlabel('Date')
@@ -143,24 +152,12 @@ try:
     fig.legend(loc="upper right", bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
     plt.show()
 
+    # Correlation analysis
     correlation = sent_and_stock["sentiment"].corr(sent_and_stock["Close"])
-    logging.info(f"Hệ số tương quan giữa Sentiment và Giá đóng cửa: {correlation:.2f}")
+    logging.info(f"Correlation coefficient between Sentiment and Closing price: {correlation:.2f}")
 
 except Exception as e:
-    logging.error(f"Đã xảy ra lỗi: {str(e)}")
+    logging.error(f"An error occurred: {str(e)}")
 
 finally:
-    logging.info("Script đã kết thúc")
-
-
-
-
-
-
-
-
-
-
-
-
-
+    logging.info("Script has ended")
