@@ -24,14 +24,14 @@ This project explores the potential of using sentiment analysis to understand th
 * Created time series visualizations of stock prices for major finance companies
 * Implemented interactive charts for better data exploration
   
-![image](https://github.com/user-attachments/assets/c7754bf1-6ecf-40a9-8d9d-612260b2ff05)
+![image](https://github.com/user-attachments/assets/a17711de-ee6b-4e11-a260-7b2ea7b9d1b6)
 
 #### 2. Sentiment
 * Implemented sentiment analysis on Reddit posts using TextBlob
 * Calculated daily average sentiment scores
 * Visualized sentiment distribution using histograms
   
-![image](https://github.com/user-attachments/assets/528467ed-018c-4fd2-a316-61ff3d7da2da)
+![image](https://github.com/user-attachments/assets/8b4cd662-889b-4463-bd3b-acc10a6c7c33)
 
 Sentiment distribution was roughly bell-shaped with a slight positive skew, ranging from -0.4 to 0.8, with most scores between 0 and 0.2
 
@@ -39,7 +39,7 @@ Sentiment distribution was roughly bell-shaped with a slight positive skew, rang
 * Synchronized Reddit sentiment data with corresponding stock prices
 * Time series plots of sentiment vs. stock prices
 
-![image](https://github.com/user-attachments/assets/228d080e-aafd-48e5-8be7-f7756673fb3f)
+![image](https://github.com/user-attachments/assets/a567e42f-000a-4e1e-b590-0b771d7c9612)
 
 # Data Insights
 
